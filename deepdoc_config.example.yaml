@@ -1,0 +1,16 @@
+# deepdoc_config.yaml
+vision_model:
+  provider: "qwen"  # 或 "openai", "zhipu", "ollama", "gemini", "anthropic"
+  model_name: "qwen-vl-max"  # 可选，有默认值
+  api_key: "your-api-key"  # 可选，也可以从环境变量读取
+  lang: "Chinese"  # 可选，默认 "Chinese"
+  base_url: ""  # 可选，某些模型需要
+
+# 其他配置项（未来扩展）
+# parser:
+#   chunk_size: 128
+#   delimiter: "\n!?;。；！？"
+
+# vision:
+#   ocr_enabled: true
+#   layout_recognition: true

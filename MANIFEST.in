@@ -1,0 +1,35 @@
+# Include main project files
+include README.md
+include LICENSE
+include *.yaml
+
+# Include all deepdoc package data
+recursive-include deepdoc *.py
+recursive-include deepdoc *.md
+recursive-include deepdoc *.txt
+recursive-include deepdoc *.json
+recursive-include deepdoc *.yaml
+recursive-include deepdoc *.yml
+recursive-include deepdoc *.csv
+recursive-include deepdoc *.onnx
+recursive-include deepdoc *.model
+recursive-include deepdoc *.res
+recursive-include deepdoc *.trie
+
+# Exclude unwanted files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .git*
+global-exclude *.egg-info
+prune deepdoc/__pycache__
+prune deepdoc/*/__pycache__
+prune deepdoc/*/*/__pycache__
+prune deepdoc/*/*/*/__pycache__
+
+# Exclude test files from package
+prune tests
+global-exclude test_*
+
+# Exclude build artifacts
+prune dist
+prune build
