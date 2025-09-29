@@ -1,6 +1,26 @@
 # Deepdoc
 
-### 编程接口
+### Installations
+
+- pip
+pip install git+https://github.com/HuangPuStar/deepdoc-lib.git
+
+- uv 
+Add the following to pyproject.toml
+
+```toml
+dependencies = [
+    # ... 
+    "deepdoc @ git+https://github.com/HuangPuStar/deepdoc-lib.git"
+]
+```
+and run
+
+``` sh
+uv sync
+```
+
+### Usage
 
 ```python
 from deepdoc import PdfParser, DocxParser, ExcelParse
@@ -18,3 +38,4 @@ excel_parser = ExcelParser()
 with open("data.xlsx", "rb") as f:
     result = excel_parser(f.read())
 ```
+
