@@ -15,6 +15,8 @@
 #
 
 from beartype.claw import beartype_this_package
+
 beartype_this_package()
 
 from .parser import *
+from .depend.simple_cv_model import *

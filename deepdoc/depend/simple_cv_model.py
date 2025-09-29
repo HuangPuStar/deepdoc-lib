@@ -64,7 +64,7 @@ class Base(ABC):
     def vision_llm_prompt(self, image):
         """生成视觉LLM提示词"""
         if self.lang.lower() == "chinese":
-            prompt_text = vision_llm_describe_prompt
+            prompt_text = vision_llm_describe_prompt()
         else:
             prompt_text = "Please describe this image in detail."
         
