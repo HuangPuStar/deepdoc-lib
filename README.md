@@ -3,22 +3,27 @@
 ### Installations
 
 - pip
-pip install git+https://github.com/HuangPuStar/deepdoc-lib.git
 
-- uv 
-Add the following to pyproject.toml
+    ``` bassh
+    pip install git+https://github.com/HuangPuStar/deepdoc-lib.git
+    ```
 
-```toml
-dependencies = [
-    # ... 
-    "deepdoc @ git+https://github.com/HuangPuStar/deepdoc-lib.git"
-]
-```
-and run
+- pyproject
 
-``` sh
-uv sync
-```
+    Add the following to pyproject.toml
+
+    ```toml
+    dependencies = [
+        # ... 
+        "deepdoc @ git+https://github.com/HuangPuStar/deepdoc-lib.git"
+    ]
+    ```
+
+    And if you use uv
+
+    ``` sh
+    uv sync
+    ```
 
 ### Parser Usage
 
@@ -74,17 +79,11 @@ export DEEPDOC_VISION_API_KEY="your-api-key"
 vision_model = create_vision_model("qwen")
 ```
 
-supported providers:
-- openai
-- qwen
-- zhipu
-- ollama
-- gemini
-- anthropic
+Supported providers: ["openai", "qwen", "zhipu", "ollama", "gemini", "anthropic"]
 
 - Use Configuration File
 
-create `deepdoc_config.yaml`:
+Create `deepdoc_config.yaml`:
 
 ```yaml
 vision_model:
