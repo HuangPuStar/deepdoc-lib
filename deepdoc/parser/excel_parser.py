@@ -16,15 +16,20 @@ import sys
 from io import BytesIO
 
 import pandas as pd
+import os
 from openpyxl import Workbook, load_workbook
 
 from ..depend.find_codec import find_codec
 
 
 class RAGFlowExcelParser:
-
     @staticmethod
     def _load_excel_to_workbook(file_like_object):
+        if isinstance(file_like_object, str):
+            if not os.path.exists(file_like_object):
+                raise FileNotFoundError(f"File not found: {file_like_object}")
+            file_like_object = open(file_like_object, "rb")
+
         if isinstance(file_like_object, bytes):
             file_like_object = BytesIO(file_like_object)
 
