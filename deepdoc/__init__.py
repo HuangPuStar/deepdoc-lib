@@ -20,3 +20,15 @@ beartype_this_package()
 
 from .parser import *
 from .depend.simple_cv_model import *
+
+__all__ = [
+    "PdfParser",
+    "PlainParser",
+    "DocxParser",
+    "ExcelParser",
+    "PptParser",
+    "HtmlParser",
+    "JsonParser",
+    "MarkdownParser",
+    "TxtParser",
+]
