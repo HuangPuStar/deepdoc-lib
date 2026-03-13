@@ -123,7 +123,13 @@ export DEEPDOC_MODEL_HOME=./models
 deepdoc-download-models
 ```
 
-By default this also downloads the required NLTK resources into `~/.cache/deepdoc/nltk_data` (or `$DEEPDOC_MODEL_HOME/nltk_data`).
+By default this also downloads the required NLTK resources into `~/.cache/deepdoc/nltk_data` (or `$DEEPDOC_MODEL_HOME/nltk_data`) and the cached `cl100k_base` tiktoken file into `~/.cache/deepdoc/tiktoken_cache` (or `$DEEPDOC_MODEL_HOME/tiktoken_cache`). `deepdoc.common.token_utils` automatically points `TIKTOKEN_CACHE_DIR` at the same location unless you override it with `DEEPDOC_TIKTOKEN_CACHE_DIR` or `TIKTOKEN_CACHE_DIR`.
+
+If you want to skip either optional offline asset, use:
+
+```bash
+deepdoc-download-models --no-nltk --no-tiktoken
+```
 
 
 ### Vision Model Usage

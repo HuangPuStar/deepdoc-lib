@@ -96,15 +96,6 @@ BUNDLES: dict[str, BundleSpec] = {
         repo_default="Xorbits/deepdoc",
         revision_env="DEEPDOC_MODELSCOPE_XGB_REVISION",
     ),
-    "tokenizer": BundleSpec(
-        name="tokenizer",
-        subdir="tokenizer",
-        required_files=("huqie.txt",),
-        local_dir_env="DEEPDOC_TOKENIZER_MODEL_DIR",
-        repo_env="DEEPDOC_MODELSCOPE_TOKENIZER_REPO",
-        repo_default="Xorbits/deepdoc",
-        revision_env="DEEPDOC_MODELSCOPE_TOKENIZER_REVISION",
-    ),
 }
 
 

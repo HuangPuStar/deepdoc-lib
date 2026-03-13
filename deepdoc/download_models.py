@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -12,7 +11,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(
         prog="deepdoc-download-models",
-        description="Download/cache all Deepdoc model bundles (and optional NLTK data) for offline use.",
+        description="Download/cache all Deepdoc model bundles, NLTK data, and tiktoken assets for offline use.",
     )
 
     # Default behavior: no args downloads everything using the remote provider into the default cache dirs
@@ -48,6 +47,16 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--nltk-data-dir",
         default=None,
         help="Where to store NLTK data (default: $DEEPDOC_NLTK_DATA_DIR, $NLTK_DATA, or ~/.cache/deepdoc/nltk_data).",
+    )
+    parser.add_argument(
+        "--no-tiktoken",
+        action="store_true",
+        help="Skip downloading the cached cl100k_base tiktoken file used by token_utils.",
+    )
+    parser.add_argument(
+        "--tiktoken-cache-dir",
+        default=None,
+        help="Where to store the cached tiktoken file (default: $DEEPDOC_TIKTOKEN_CACHE_DIR, $TIKTOKEN_CACHE_DIR, $DEEPDOC_MODEL_HOME/tiktoken_cache, or ~/.cache/deepdoc/tiktoken_cache).",
     )
     parser.add_argument(
         "-v",
@@ -99,6 +108,7 @@ def main(argv: list[str] | None = None) -> int:
 
     failures: list[str] = []
     resolved: dict[str, str] = {}
+    tiktoken_cache_path: str | None = None
 
     for bundle in args.bundle:
         try:
@@ -123,8 +133,29 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as exc:
             failures.append(f"nltk: {exc}")
 
+    if not args.no_tiktoken:
+        try:
+            from deepdoc.common.tiktoken_cache import configure_tiktoken_cache_env, download_cl100k_base
+
+            tiktoken_cache_path = str(
+                download_cl100k_base(
+                    cache_dir=args.tiktoken_cache_dir,
+                    model_home=model_home,
+                    offline=args.offline,
+                )
+            )
+            configure_tiktoken_cache_env(
+                cache_dir=args.tiktoken_cache_dir,
+                model_home=model_home,
+            )
+        except Exception as exc:
+            failures.append(f"tiktoken: {exc}")
+
     for bundle_name in sorted(resolved):
         print(f"{bundle_name}\t{resolved[bundle_name]}")
+
+    if tiktoken_cache_path:
+        print(f"tiktoken\t{tiktoken_cache_path}")
 
     if failures:
         for item in failures:
@@ -136,4 +167,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

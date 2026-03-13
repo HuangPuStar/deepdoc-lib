@@ -14,21 +14,26 @@
 #  limitations under the License.
 #
 
-import os
 import tiktoken
 
-from .file_utils import get_project_base_directory
+from .tiktoken_cache import configure_tiktoken_cache_env
 
-tiktoken_cache_dir = get_project_base_directory()
-os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache_dir
-# encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")
-encoder = tiktoken.get_encoding("cl100k_base")
+
+_encoder = None
+
+
+def _get_encoder():
+    global _encoder
+    if _encoder is None:
+        configure_tiktoken_cache_env()
+        _encoder = tiktoken.get_encoding("cl100k_base")
+    return _encoder
 
 
 def num_tokens_from_string(string: str) -> int:
     """Returns the number of tokens in a text string."""
     try:
-        code_list = encoder.encode(string)
+        code_list = _get_encoder().encode(string)
         return len(code_list)
     except Exception:
         return 0
@@ -84,4 +89,8 @@ def total_token_count_from_response(resp):
 
 def truncate(string: str, max_len: int) -> str:
     """Returns truncated text if the length of text exceed max_len."""
-    return encoder.decode(encoder.encode(string)[:max_len])
+    try:
+        encoder = _get_encoder()
+        return encoder.decode(encoder.encode(string)[:max_len])
+    except Exception:
+        return string[:max_len]
