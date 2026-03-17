@@ -89,6 +89,11 @@ extend-select = ["ASYNC", "ASYNC1"]
 ignore = ["E402"]
 
 [tool.pytest.ini_options]
+addopts = [
+    "--ignore=tests/test_data",
+    "--ignore=tests/test_results",
+]
+testpaths = ["tests"]
 markers = [
     "p1: high priority test cases",
     "p2: medium priority test cases",

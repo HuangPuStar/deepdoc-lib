@@ -6,15 +6,8 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 _RESOURCE_SPECS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    (
-        "punkt",
-        (
-            "tokenizers/punkt",
-            "tokenizers/punkt.zip",
-            "tokenizers/punkt_tab",
-            "tokenizers/punkt_tab.zip",
-        ),
-    ),
+    ("punkt", ("tokenizers/punkt", "tokenizers/punkt.zip")),
+    ("punkt_tab", ("tokenizers/punkt_tab", "tokenizers/punkt_tab.zip")),
     ("wordnet", ("corpora/wordnet", "corpora/wordnet.zip")),
     (
         "averaged_perceptron_tagger",

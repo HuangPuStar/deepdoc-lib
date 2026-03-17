@@ -22,11 +22,13 @@ import inspect
 import logging
 import os
 from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
 
 
 GLOBAL_MODELSCOPE_REPO_ENV = "DEEPDOC_MODELSCOPE_REPO"
 GLOBAL_MODELSCOPE_REVISION_ENV = "DEEPDOC_MODELSCOPE_REVISION"
+TOKENIZER_MODEL_DIR_ENV = "DEEPDOC_TOKENIZER_MODEL_DIR"
 
 
 def _parse_bool(value: str | None, default: bool = False) -> bool:
@@ -54,6 +56,21 @@ def _model_home_path(model_home: str | None) -> Path:
     if configured:
         return Path(configured).expanduser().resolve()
     return Path.home().joinpath(".cache", "deepdoc")
+
+
+def _resolve_tokenizer_dict_path() -> Path:
+    configured_dir = os.getenv(TOKENIZER_MODEL_DIR_ENV)
+    if configured_dir:
+        dictionary = Path(configured_dir).expanduser().resolve().joinpath("huqie.txt")
+    else:
+        dictionary = Path(str(resources.files("deepdoc").joinpath("dict", "huqie.txt"))).resolve()
+
+    if not dictionary.exists():
+        raise FileNotFoundError(
+            "Tokenizer dictionary not found: {}. Set {} to a directory containing huqie.txt."
+            .format(dictionary, TOKENIZER_MODEL_DIR_ENV)
+        )
+    return dictionary
 
 
 @dataclass(frozen=True)
@@ -356,5 +373,5 @@ def resolve_tokenizer_dict_prefix(
     provider: str | None = None,
     offline: bool | None = None,
 ) -> str:
-    bundle_dir = Path(resolve_bundle_dir("tokenizer", model_home=model_home, provider=provider, offline=offline))
-    return str(bundle_dir.joinpath("huqie"))
+    del model_home, provider, offline
+    return str(_resolve_tokenizer_dict_path().with_suffix(""))
