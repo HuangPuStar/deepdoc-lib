@@ -24,17 +24,12 @@ import os
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
+from ..common.misc_utils import offline_mode_or_from_env
 
 
 GLOBAL_MODELSCOPE_REPO_ENV = "DEEPDOC_MODELSCOPE_REPO"
 GLOBAL_MODELSCOPE_REVISION_ENV = "DEEPDOC_MODELSCOPE_REVISION"
 TOKENIZER_MODEL_DIR_ENV = "DEEPDOC_TOKENIZER_MODEL_DIR"
-
-
-def _parse_bool(value: str | None, default: bool = False) -> bool:
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _normalize_provider(provider: str | None) -> str:
@@ -66,10 +61,7 @@ def _resolve_tokenizer_dict_path() -> Path:
         dictionary = Path(str(resources.files("deepdoc").joinpath("dict", "huqie.txt"))).resolve()
 
     if not dictionary.exists():
-        raise FileNotFoundError(
-            "Tokenizer dictionary not found: {}. Set {} to a directory containing huqie.txt."
-            .format(dictionary, TOKENIZER_MODEL_DIR_ENV)
-        )
+        raise FileNotFoundError("Tokenizer dictionary not found: {}. Set {} to a directory containing huqie.txt.".format(dictionary, TOKENIZER_MODEL_DIR_ENV))
     return dictionary
 
 
@@ -260,7 +252,7 @@ def resolve_bundle_dir(
 
     spec = BUNDLES[bundle]
     provider_name = _normalize_provider(provider)
-    offline_mode = offline if offline is not None else _parse_bool(os.getenv("DEEPDOC_OFFLINE"), default=False)
+    offline_mode = offline_mode_or_from_env(offline)
 
     explicit_local = os.getenv(spec.local_dir_env)
     if explicit_local:

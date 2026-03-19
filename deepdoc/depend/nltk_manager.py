@@ -2,6 +2,7 @@ import logging
 import os
 import threading
 from pathlib import Path
+from ..common.misc_utils import offline_mode_or_from_env
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +23,6 @@ _RESOURCE_SPECS: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 _lock = threading.Lock()
 _ensured_keys: set[tuple[str, bool]] = set()
-
-
-def _parse_bool(value: str | None, default: bool = False) -> bool:
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _resolve_nltk_data_dir(data_dir: str | None) -> Path | None:
@@ -81,7 +76,7 @@ def ensure_nltk_data(
     import nltk
 
     resolved_dir = _resolve_nltk_data_dir(data_dir)
-    offline_mode = offline if offline is not None else _parse_bool(os.getenv("DEEPDOC_OFFLINE"), default=False)
+    offline_mode = offline_mode_or_from_env(offline)
     auto_download_mode = not offline_mode
 
     _ensure_search_path(nltk, resolved_dir)
@@ -110,10 +105,7 @@ def ensure_nltk_data(
         if missing_packages:
             searched_paths = ", ".join(nltk.data.path)
             raise RuntimeError(
-                "Missing required NLTK packages: {}. Searched paths: {}. "
-                "Set DEEPDOC_NLTK_DATA_DIR to a local NLTK data path, or disable offline mode by setting "
-                "DEEPDOC_OFFLINE=0."
-                .format(
+                "Missing required NLTK packages: {}. Searched paths: {}. Set DEEPDOC_NLTK_DATA_DIR to a local NLTK data path, or disable offline mode by setting DEEPDOC_OFFLINE=0.".format(
                     ", ".join(missing_packages),
                     searched_paths,
                 )
