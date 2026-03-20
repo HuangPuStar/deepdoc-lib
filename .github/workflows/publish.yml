@@ -1,6 +1,14 @@
+# This workflow handles the distribution of Python packages.
+# 1. Automatic: Every push/tag builds the distribution.
+# 2. Automatic: Tag pushes (refs/tags/*) deploy to TestPyPI.
+# 3. Manual: Production releases to PyPI require a manual trigger (workflow_dispatch)
+#    to prevent accidental deployments.
+
 name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 
-on: push
+on:
+    push:
+    workflow_dispatch:
 
 jobs:
     build:
@@ -32,7 +40,8 @@ jobs:
     publish-to-pypi:
         name: >-
             Publish Python 🐍 distribution 📦 to PyPI
-        if: startsWith(github.ref, 'refs/tags/') # only publish to PyPI on tag pushes
+        # Manual dispatch required to prevent accidental production releases
+        if: github.event_name == 'workflow_dispatch'
         needs:
             - build
         runs-on: ubuntu-latest
@@ -53,6 +62,7 @@ jobs:
 
     publish-to-testpypi:
         name: Publish Python 🐍 distribution 📦 to TestPyPI
+        if: startsWith(github.ref, 'refs/tags/') # only publish to TestPyPI on tag pushes
         needs:
             - build
         runs-on: ubuntu-latest

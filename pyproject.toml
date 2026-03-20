@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools >= 77.0.3", "wheel"]
+requires = ["setuptools >= 77.0.3", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepdoc_lib"
-version = "0.1.0"
+dynamic = ["version"]
 description = "[RAGFlow](https://ragflow.io/) is an open-source RAG (Retrieval-Augmented Generation) engine based on deep document understanding. It offers a streamlined RAG workflow for businesses of any scale, combining LLM (Large Language Models) to provide truthful question-answering capabilities, backed by well-founded citations from various complex formatted data."
 authors = [{ name = "Zhichang Yu", email = "yuzhichang@gmail.com" }]
 license-files = ["LICENSE"]
@@ -94,3 +94,7 @@ markers = [
     "p2: medium priority test cases",
     "p3: low priority test cases",
 ]
+
+[tool.setuptools_scm]
+write_to = "deepdoc/_version.py"
+fallback_version = "0.1.0"
