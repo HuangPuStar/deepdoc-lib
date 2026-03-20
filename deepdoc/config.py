@@ -11,14 +11,9 @@ from .common.model_store import (
     resolve_xgb_model_dir,
     validate_bundle_dir,
 )
+from .common.misc_utils import offline_mode_or_from_env
 
 ProviderType = Literal["local", "modelscope", "auto"]
-
-
-def _parse_bool(value: str | None, default: bool = False) -> bool:
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _normalize_provider(provider: str) -> ProviderType:
@@ -31,9 +26,7 @@ def _normalize_provider(provider: str) -> ProviderType:
     }
     normalized = aliases.get(normalized, normalized)
     if normalized not in {"local", "modelscope", "auto"}:
-        raise ValueError(
-            "Unsupported model provider '{}'. Use one of: local, modelscope, auto.".format(provider)
-        )
+        raise ValueError("Unsupported model provider '{}'. Use one of: local, modelscope, auto.".format(provider))
     return normalized  # type: ignore[return-value]
 
 
@@ -64,13 +57,10 @@ class TokenizerConfig:
             if dictionary.is_dir():
                 dictionary = dictionary.joinpath("huqie.txt")
             if dictionary.suffix != ".txt":
-                raise ValueError(
-                    "TokenizerConfig.dict_path must point to a '.txt' dictionary file, got: {}".format(dictionary)
-                )
+                raise ValueError("TokenizerConfig.dict_path must point to a '.txt' dictionary file, got: {}".format(dictionary))
             _require_file(
                 dictionary,
-                "Tokenizer dictionary not found: {}. Provide a valid TokenizerConfig.dict_path."
-                .format(dictionary),
+                "Tokenizer dictionary not found: {}. Provide a valid TokenizerConfig.dict_path.".format(dictionary),
             )
             return str(dictionary)
 
@@ -86,7 +76,7 @@ class TokenizerConfig:
 
         return cls(
             dict_path=dict_path,
-            offline=_parse_bool(os.getenv("DEEPDOC_OFFLINE"), default=False),
+            offline=offline_mode_or_from_env(None),
             nltk_data_dir=os.getenv("DEEPDOC_NLTK_DATA_DIR"),
         )
 
@@ -107,10 +97,7 @@ class PdfModelConfig:
             candidate = Path(explicit_dir).expanduser().resolve()
             exists, missing = validate_bundle_dir(bundle, candidate)
             if not exists:
-                raise FileNotFoundError(
-                    "Missing required files for '{}' bundle in {}: {}"
-                    .format(bundle, candidate, ", ".join(missing))
-                )
+                raise FileNotFoundError("Missing required files for '{}' bundle in {}: {}".format(bundle, candidate, ", ".join(missing)))
             return str(candidate)
 
         model_provider = self.normalized_provider()

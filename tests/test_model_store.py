@@ -22,10 +22,6 @@ def _create_combined_repo_layout(root: Path) -> None:
     for name in ms.BUNDLES["xgb"].required_files:
         _touch(root / "xgb" / name)
 
-    # Tokenizer bundle
-    for name in ms.BUNDLES["tokenizer"].required_files:
-        _touch(root / "tokenizer" / name)
-
 
 class TestModelStoreSharedRepo(unittest.TestCase):
     def setUp(self) -> None:
@@ -68,12 +64,10 @@ class TestModelStoreSharedRepo(unittest.TestCase):
             with patch.object(ms, "_import_modelscope_snapshot_download", return_value=snapshot_download):
                 vision_dir = Path(ms.resolve_bundle_dir("vision", model_home=tmp, provider="modelscope", offline=False))
                 xgb_dir = Path(ms.resolve_bundle_dir("xgb", model_home=tmp, provider="modelscope", offline=False))
-                tok_dir = Path(ms.resolve_bundle_dir("tokenizer", model_home=tmp, provider="modelscope", offline=False))
 
             expected_root = (Path(tmp) / "modelscope" / "Xorbits__deepdoc" / "v1").resolve()
             self.assertEqual(vision_dir.resolve(), (expected_root / "vision").resolve())
             self.assertEqual(xgb_dir.resolve(), (expected_root / "xgb").resolve())
-            self.assertEqual(tok_dir.resolve(), (expected_root / "tokenizer").resolve())
 
             self.assertGreaterEqual(len(calls), 1)
             for call in calls:
@@ -134,8 +128,22 @@ class TestModelStoreSharedRepo(unittest.TestCase):
             with patch.object(ms, "_import_modelscope_snapshot_download", return_value=snapshot_download):
                 vision_dir = Path(ms.resolve_bundle_dir("vision", model_home=tmp, provider="auto", offline=False))
                 xgb_dir = Path(ms.resolve_bundle_dir("xgb", model_home=tmp, provider="auto", offline=False))
-                tok_dir = Path(ms.resolve_bundle_dir("tokenizer", model_home=tmp, provider="auto", offline=False))
 
             self.assertEqual(vision_dir.resolve(), (expected_root / "vision").resolve())
             self.assertEqual(xgb_dir.resolve(), (expected_root / "xgb").resolve())
-            self.assertEqual(tok_dir.resolve(), (expected_root / "tokenizer").resolve())
+
+    def test_resolve_tokenizer_dict_prefix_uses_packaged_dict_by_default(self) -> None:
+        prefix = Path(ms.resolve_tokenizer_dict_prefix())
+
+        self.assertEqual(prefix.name, "huqie")
+        self.assertTrue(prefix.with_suffix(".txt").exists())
+
+    def test_resolve_tokenizer_dict_prefix_uses_env_dir_when_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tokenizer_dir = Path(tmp) / "tokenizer"
+            _touch(tokenizer_dir / "huqie.txt")
+            os.environ[ms.TOKENIZER_MODEL_DIR_ENV] = str(tokenizer_dir)
+
+            prefix = Path(ms.resolve_tokenizer_dict_prefix())
+
+            self.assertEqual(prefix.resolve(), (tokenizer_dir / "huqie").resolve())

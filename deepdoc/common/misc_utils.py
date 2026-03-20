@@ -15,6 +15,7 @@
 #
 
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -31,3 +32,13 @@ def pip_install_torch():
         return True
     except ImportError:
         return False
+
+
+def parse_bool(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def offline_mode_or_from_env(offline: bool | None = None) -> bool:
+    return offline if offline is not None else parse_bool(os.getenv("DEEPDOC_OFFLINE"), default=False)
