@@ -13,20 +13,21 @@ from .common.model_store import (
 )
 from .common.misc_utils import offline_mode_or_from_env
 
-ProviderType = Literal["local", "modelscope", "auto"]
+ProviderType = Literal["local", "huggingface", "modelscope", "auto"]
 
 
 def _normalize_provider(provider: str) -> ProviderType:
     normalized = provider.strip().lower()
     aliases = {
+        "hf": "huggingface",
         "ms": "modelscope",
-        "remote": "modelscope",
+        "remote": "huggingface",
         "filesystem": "local",
         "user": "local",
     }
     normalized = aliases.get(normalized, normalized)
-    if normalized not in {"local", "modelscope", "auto"}:
-        raise ValueError("Unsupported model provider '{}'. Use one of: local, modelscope, auto.".format(provider))
+    if normalized not in {"local", "huggingface", "modelscope", "auto"}:
+        raise ValueError("Unsupported model provider '{}'. Use one of: local, huggingface, modelscope, auto.".format(provider))
     return normalized  # type: ignore[return-value]
 
 

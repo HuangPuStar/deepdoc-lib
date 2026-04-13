@@ -112,6 +112,49 @@ class TestModelStoreSharedRepo(unittest.TestCase):
             self.assertEqual(calls[0]["repo"], "OtherOrg/vision-only")
             self.assertEqual(Path(calls[0]["local_dir"]).resolve(), (Path(tmp) / "vision").resolve())
 
+    def test_resolve_from_huggingface_repo(self) -> None:
+        calls: list[dict[str, str | None | bool]] = []
+
+        def snapshot_download(
+            repo_id: str,
+            *,
+            revision: str | None = None,
+            cache_dir: str | None = None,
+            local_dir: str | None = None,
+            local_dir_use_symlinks: bool | None = None,
+            local_files_only: bool | None = None,
+        ) -> str:
+            calls.append(
+                {
+                    "repo": repo_id,
+                    "revision": revision,
+                    "cache_dir": cache_dir,
+                    "local_dir": local_dir,
+                    "local_files_only": local_files_only,
+                }
+            )
+            root = Path(local_dir) if local_dir else Path(cache_dir or ".")
+            root.mkdir(parents=True, exist_ok=True)
+            _create_combined_repo_layout(root)
+            return str(root)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["DEEPDOC_HUGGINGFACE_REVISION"] = "main"
+
+            with patch.object(ms, "_import_huggingface_snapshot_download", return_value=snapshot_download):
+                vision_dir = Path(ms.resolve_bundle_dir("vision", model_home=tmp, provider="huggingface", offline=False))
+                xgb_dir = Path(ms.resolve_bundle_dir("xgb", model_home=tmp, provider="huggingface", offline=False))
+
+            expected_root = (Path(tmp) / "huggingface" / "Xorbits__deepdoc" / "main").resolve()
+            self.assertEqual(vision_dir.resolve(), (expected_root / "vision").resolve())
+            self.assertEqual(xgb_dir.resolve(), (expected_root / "xgb").resolve())
+            self.assertGreaterEqual(len(calls), 1)
+            for call in calls:
+                self.assertEqual(call["repo"], "Xorbits/deepdoc")
+                self.assertEqual(call["revision"], "main")
+                self.assertEqual(Path(call["local_dir"]).resolve(), expected_root)
+                self.assertFalse(call["local_files_only"])
+
     def test_auto_provider_discovers_pre_downloaded_shared_repo_without_downloading(self) -> None:
         """If models were previously downloaded into the shared repo dir, 'auto' should reuse them."""
 
@@ -131,6 +174,68 @@ class TestModelStoreSharedRepo(unittest.TestCase):
 
             self.assertEqual(vision_dir.resolve(), (expected_root / "vision").resolve())
             self.assertEqual(xgb_dir.resolve(), (expected_root / "xgb").resolve())
+
+    def test_auto_provider_falls_back_to_modelscope_when_huggingface_download_fails(self) -> None:
+        hf_calls: list[dict[str, str | None]] = []
+        ms_calls: list[dict[str, str | None]] = []
+
+        def hf_snapshot_download(
+            repo_id: str,
+            *,
+            revision: str | None = None,
+            cache_dir: str | None = None,
+            local_dir: str | None = None,
+            local_dir_use_symlinks: bool | None = None,
+            local_files_only: bool | None = None,
+        ) -> str:
+            hf_calls.append(
+                {
+                    "repo": repo_id,
+                    "revision": revision,
+                    "cache_dir": cache_dir,
+                    "local_dir": local_dir,
+                }
+            )
+            raise RuntimeError("hf unavailable")
+
+        def ms_snapshot_download(
+            model_id: str | None = None,
+            repo_id: str | None = None,
+            revision: str | None = None,
+            cache_dir: str | None = None,
+            local_dir: str | None = None,
+            local_dir_use_symlinks: bool | None = None,
+            local_files_only: bool | None = None,
+        ) -> str:
+            resolved_repo = model_id or repo_id
+            ms_calls.append(
+                {
+                    "repo": resolved_repo,
+                    "revision": revision,
+                    "cache_dir": cache_dir,
+                    "local_dir": local_dir,
+                }
+            )
+            root = Path(local_dir) if local_dir else Path(cache_dir or ".")
+            root.mkdir(parents=True, exist_ok=True)
+            _create_combined_repo_layout(root)
+            return str(root)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            os.environ["DEEPDOC_HUGGINGFACE_REPO"] = "Xorbits/deepdoc"
+            os.environ["DEEPDOC_HUGGINGFACE_REVISION"] = "main"
+            os.environ[ms.GLOBAL_MODELSCOPE_REPO_ENV] = "Xorbits/deepdoc"
+            os.environ[ms.GLOBAL_MODELSCOPE_REVISION_ENV] = "v1"
+
+            with (
+                patch.object(ms, "_import_huggingface_snapshot_download", return_value=hf_snapshot_download),
+                patch.object(ms, "_import_modelscope_snapshot_download", return_value=ms_snapshot_download),
+            ):
+                vision_dir = Path(ms.resolve_bundle_dir("vision", model_home=tmp, provider="auto", offline=False))
+
+            self.assertEqual(len(hf_calls), 1)
+            self.assertEqual(len(ms_calls), 1)
+            self.assertEqual(Path(vision_dir).resolve(), (Path(tmp) / "modelscope" / "Xorbits__deepdoc" / "v1" / "vision").resolve())
 
     def test_resolve_tokenizer_dict_prefix_uses_packaged_dict_by_default(self) -> None:
         prefix = Path(ms.resolve_tokenizer_dict_prefix())
