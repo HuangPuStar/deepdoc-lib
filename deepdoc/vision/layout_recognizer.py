@@ -17,7 +17,7 @@
 import logging
 import math
 import os
-# import re
+import re
 from collections import Counter
 from copy import deepcopy
 
@@ -68,9 +68,8 @@ class LayoutRecognizer(Recognizer):
 
     def __call__(self, image_list, ocr_res, scale_factor=3, thr=0.2, batch_size=16, drop=True):
         def __is_garbage(b):
-            return False
-            # patt = [r"^•+$", "^[0-9]{1,2} / ?[0-9]{1,2}$", r"^[0-9]{1,2} of [0-9]{1,2}$", "^http://[^ ]{12,}", "\\(cid *: *[0-9]+ *\\)"]
-            # return any([re.search(p, b["text"]) for p in patt])
+            patt = [r"\(cid\s*:\s*\d+\s*\)"]
+            return any([re.search(p, b.get("text", "")) for p in patt])
 
         if self.client:
             layouts = self.client.predict(image_list)
@@ -138,16 +137,23 @@ class LayoutRecognizer(Recognizer):
             for lt in ["footer", "header", "reference", "figure caption", "table caption", "title", "table", "text", "figure", "equation"]:
                 findLayout(lt)
 
-            # add box to figure layouts which has not text box
-            for i, lt in enumerate([lt for lt in lts if lt["type"] in ["figure", "equation"]]):
-                if lt.get("visited"):
-                    continue
-                lt = deepcopy(lt)
-                del lt["type"]
-                lt["text"] = ""
-                lt["layout_type"] = "figure"
-                lt["layoutno"] = f"figure-{i}"
-                bxs.append(lt)
+            # add box to figure/equation layouts which have no text box.
+            # Index within each type's own list and keep the type as the layoutno
+            # prefix so these match the namespace findLayout() assigns to
+            # text-overlapping boxes (figure-N vs equation-N). Using a combined
+            # figure+equation index with a fixed "figure" prefix would collide
+            # with figure-N tags from findLayout and merge unrelated regions.
+            for ty in ["figure", "equation"]:
+                for i, lt in enumerate([lt for lt in lts if lt["type"] == ty]):
+                    if lt.get("visited"):
+                        continue
+                    lt = deepcopy(lt)
+                    lt.pop("type", None)
+                    lt["text"] = ""
+                    lt["layout_type"] = "figure"
+                    lt["layoutno"] = f"{ty}-{i}"
+                    logging.debug(f"Created placeholder box {lt['layoutno']} for textless {ty} region")
+                    bxs.append(lt)
 
             boxes.extend(bxs)
 
@@ -457,16 +463,21 @@ class AscendLayoutRecognizer(Recognizer):
             for ty in ["footer", "header", "reference", "figure caption", "table caption", "title", "table", "text", "figure", "equation"]:
                 _tag_layout(ty)
 
-            figs = [lt for lt in lts if lt["type"] in ["figure", "equation"]]
-            for i, lt in enumerate(figs):
-                if lt.get("visited"):
-                    continue
-                lt = deepcopy(lt)
-                lt.pop("type", None)
-                lt["text"] = ""
-                lt["layout_type"] = "figure"
-                lt["layoutno"] = f"figure-{i}"
-                bxs.append(lt)
+            # Index within each type's own list and keep the type as the layoutno
+            # prefix so these match the namespace _tag_layout() assigns to
+            # text-overlapping boxes (figure-N vs equation-N). Using a combined
+            # figure+equation index with a fixed "figure" prefix would collide
+            # with figure-N tags from _tag_layout and merge unrelated regions.
+            for ty in ["figure", "equation"]:
+                for i, lt in enumerate([lt for lt in lts if lt["type"] == ty]):
+                    if lt.get("visited"):
+                        continue
+                    lt = deepcopy(lt)
+                    lt.pop("type", None)
+                    lt["text"] = ""
+                    lt["layout_type"] = "figure"
+                    lt["layoutno"] = f"{ty}-{i}"
+                    bxs.append(lt)
 
             boxes_out.extend(bxs)
 
