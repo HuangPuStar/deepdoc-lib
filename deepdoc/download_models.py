@@ -18,8 +18,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     # (~/.cache/deepdoc unless DEEPDOC_MODEL_HOME is set).
     parser.add_argument(
         "--provider",
-        default="modelscope",
-        choices=("auto", "local", "modelscope"),
+        default="huggingface",
+        choices=("auto", "local", "huggingface", "modelscope"),
         help="Model provider to use (default: %(default)s).",
     )
     parser.add_argument(
@@ -72,7 +72,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return args
 
 
-def download_all(*, provider: str = "modelscope", model_home: str | None = None, offline: bool = False) -> dict[str, str]:
+def download_all(*, provider: str = "huggingface", model_home: str | None = None, offline: bool = False) -> dict[str, str]:
     """Download/cache all bundles into the configured cache directories."""
     from deepdoc.common import model_store
 

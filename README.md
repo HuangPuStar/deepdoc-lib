@@ -83,7 +83,7 @@ pdf_parser = PdfParser()
 env definitions:
 
 ```bash
-# provider: auto | local | modelscope
+# provider: auto | local | huggingface | modelscope
 export DEEPDOC_MODEL_PROVIDER=auto
 
 # shared model cache root (default: ~/.cache/deepdoc)
@@ -93,7 +93,13 @@ export DEEPDOC_MODEL_HOME=/path/to/deepdoc-models
 export DEEPDOC_VISION_MODEL_DIR=/path/to/vision
 export DEEPDOC_XGB_MODEL_DIR=/path/to/xgb
 
-# single combined ModelScope repo (all bundles in one repo)
+# single combined Hugging Face repo (all bundles in one repo)
+# (default: Xorbits/deepdoc)
+export DEEPDOC_HUGGINGFACE_REPO=Xorbits/deepdoc
+# optional shared revision (default: main)
+export DEEPDOC_HUGGINGFACE_REVISION=main
+
+# optional single combined ModelScope repo (all bundles in one repo)
 # (default: Xorbits/deepdoc)
 export DEEPDOC_MODELSCOPE_REPO=Xorbits/deepdoc
 # optional shared revision (default: master)
@@ -114,6 +120,12 @@ To pre-download all model bundles (vision/xgb/tokenizer) into the default cache 
 deepdoc-download-models
 # or (from source checkout)
 python -m deepdoc.download_models
+```
+
+This uses Hugging Face by default. To force ModelScope instead:
+
+```bash
+deepdoc-download-models --provider modelscope
 ```
 
 If you want to override the cache location, set `DEEPDOC_MODEL_HOME`:
